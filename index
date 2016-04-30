@@ -1,0 +1,100 @@
+
+<HTML>
+<head>
+
+
+</head>
+<body>
+<div id="theater">
+  <video id=v src="demo.mp4" controls="false"></video>
+  <canvas id=c></canvas>
+  <canvas id = "canvas1" ></canvas>
+</div>
+
+<script type="text/javascript">
+	document.addEventListener('DOMContentLoaded', function(){
+    var v = document.getElementById('v');
+    var canvas = document.getElementById('c');
+    var context = canvas.getContext('2d');
+    var canvas1 = document.getElementById('canvas1');
+    var context1 = canvas1.getContext('2d');
+    var back = document.createElement('canvas');
+    var backcontext = back.getContext('2d');
+
+    var cw,ch;
+
+    v.addEventListener('play', function(){
+        cw = v.clientWidth;
+        ch = v.clientHeight;
+        canvas.width = cw;
+        canvas.height = ch;
+        canvas1.width = cw;
+        canvas1.height = ch;
+        back.width = cw;
+        back.height = ch;
+        draw(v,context,context1,backcontext,cw,ch);
+    },false);
+
+},false);
+
+function draw(v,c,c2,bc,w,h) {
+    if(v.paused || v.ended) return false;
+    // First, draw it into the backing canvas
+    bc.drawImage(v,0,0,w,h);
+    // Grab the pixel data from the backing canvas
+    var idata = bc.getImageData(0,0,w,h);
+    var data = idata.data;
+
+    // Invert video function
+    for(var i = 0; i < data.length; i+=4) {
+        var r = data[i];
+        var g = data[i+1];
+        var b = data[i+2];
+        data[i] = 255 - r;
+        data[i+1] = 255 - g;
+        data[i+2] = 255 - b;
+    }
+    idata.data = data;
+    // Draw the pixels onto the visible canvas
+    c.putImageData(idata,0,0);
+
+    idata = bc.getImageData(0,0,w,h);
+    var data1 = idata.data;
+
+    //Gaussian function
+    var sigma, pi, d1, d2, sum;
+    pi = 3.141592654;
+    sigma = 1.5;
+    d1 = 1.0 / (Math.sqrt(2.0 * pi) * sigma);
+    d2 = -1.0 / (2.0 * sigma * sigma);
+    sum = 0.0;
+
+    var kernel = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    for (var i = -2; i < 3; i += 1)
+    {
+    	for (var j = -2; j < 3; j += 1)
+    	{
+    		kernel[(i + 2) * 5 + j + 2] = d1 * Math.exp((i * i + j * j) * d2);
+    		sum += d1 * Math.exp((i * i + j * j) * d2);
+    	}
+    }
+
+    for (var i = -2; i < 3; i += 1)
+    {
+    	for (var j = -2; j < 3; j += 1)
+    	{
+    		kernel[(i + 2) * 5 + j + 2] /= sum;
+    	}
+    }
+
+  
+    c2.putImageData(idata, 0, 0);
+
+    // Start over!
+    setTimeout(function(){ draw(v,c,c2,bc,w,h); }, 0);
+}
+
+</script>
+
+</body>
+</HTML>
