@@ -86,6 +86,52 @@ function draw(v,c,c2,bc,w,h) {
     		kernel[(i + 2) * 5 + j + 2] /= sum;
     	}
     }
+ //Convolution
+    for (var row = 0; row < h; row += 1)
+    {
+    	for (var col = 0; col < w; col += 1)
+    	{
+    		var total = [0.0, 0.0, 0.0];
+    		for (var i = -2; i < 3; i += 1)
+		    {
+		    	for (var j = -2; j < 3; j += 1)
+		    	{
+		    		var trow = row + i;
+		    		var tcol = col + j;
+
+			    	if (trow < 0 || trow >= h || tcol >= w || tcol < 0)
+			    	{}
+			    	else
+			    	{
+			    		total[0] += kernel[(i + 2) * 5 + j + 2] * data1[trow * w * 4 + tcol * 4];
+			    		total[1] += kernel[(i + 2) * 5 + j + 2] * data1[trow * w * 4 + tcol * 4 + 1];
+			    		total[2] += kernel[(i + 2) * 5 + j + 2] * data1[trow * w * 4 + tcol * 4 + 2];
+			    	}
+		    	}
+		    }
+
+		    for (var k = 0; k < 3; k += 1)
+		    {
+			    if (total[k] < 0)
+			    {
+			    	idata.data[row * w * 4 + col * 4 + k] = 0;
+			    }
+			    else
+			    {
+			    	if (total[k] > 255)
+			    	{
+			    		idata.data[row * w * 4 + col * 4 + k] = 255;
+			    	}
+			    	else
+			    	{
+			    		idata.data[row * w * 4 + col * 4 + k] = total[k];
+			    	}
+			    }
+			}
+
+
+    	}
+    }
 
   
     c2.putImageData(idata, 0, 0);
